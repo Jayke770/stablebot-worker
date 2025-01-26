@@ -10,6 +10,7 @@ import { dexHandler } from "./lib/dex";
 import { bot } from "./lib/bot";
 import type { InlineKeyboardButton } from "grammy/types";
 import { InlineKeyboard } from "grammy";
+import { tonHandler } from "./lib/ton";
 class Tasks {
     async updateBalance(job: Job) {
         try {
@@ -31,12 +32,25 @@ class Tasks {
                             token.balance = tokenData.balance
                             token.usdValue = utils.unitToUsd(tokenData.balance, parseFloat(tokenInfo.priceUSD || "0"))
                         }
-                    } else {
+                    }
+                    if (utils.isTRON(token.chainId)) {
                         tronHandler.setNetwork(token.chainId)
                         const wallet = lodash.find(user?.wallets, function (e) { return e.type === "tron" })
                         if (wallet) {
                             const [tokenData, tokenInfo] = await Promise.all([
                                 tronHandler.getTokenBalance(wallet.address, token),
+                                dexHandler.getTokenInfo(token.chainId, token.address)
+                            ])
+                            token.balance = tokenData.balance
+                            token.usdValue = utils.unitToUsd(tokenData.balance, parseFloat(tokenInfo.priceUSD || "0"))
+                        }
+                    }
+                    if (utils.isTON(token.chainId)) {
+                        tonHandler.setChain(token.chainId)
+                        const wallet = lodash.find(user?.wallets, function (e) { return e.type === "ton" })
+                        if (wallet) {
+                            const [tokenData, tokenInfo] = await Promise.all([
+                                tonHandler.getTokenBalance(wallet.address, token),
                                 dexHandler.getTokenInfo(token.chainId, token.address)
                             ])
                             token.balance = tokenData.balance

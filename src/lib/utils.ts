@@ -20,6 +20,8 @@ export class Utils {
         return { text: params.text, callback_data: params?.callback_data, url: params?.url, web_app: params?.web_app ?? { url: "" } }
     }
     isEVM = (chainId: string) => lodash.includes(["1", "84532"], chainId)
+    isTRON = (chainId: string) => lodash.includes(["tron", "shasta"], chainId)
+    isTON = (chainId: string) => lodash.includes(["ton", "ton-testnet"], chainId)
     getChain(chainId: string) {
         return DEFAULT_CHAINS.find(e => chainId.toLowerCase().trim() === e.chainId.toLowerCase().trim())
     }

@@ -19,10 +19,13 @@ export const envconfig = envalid.cleanEnv(process.env, {
     WORKER_DB_USERNAME: envalid.str(),
     WORKER_DB_PASSWORD: envalid.str(),
     CHAIN_RPC_1: envalid.str(),
-    CHAIN_RPC_84532: envalid.str({ default: "" }),
-    CHAIN_RPC_TRON: envalid.str(),
-    CHAIN_RPC_SHASTA: envalid.str({ default: "" }),
-
+    CHAIN_RPC_84532: envalid.url({ default: "" }),
+    CHAIN_RPC_TRON: envalid.url(),
+    CHAIN_RPC_SHASTA: envalid.url({ default: "" }),
+    CHAIN_TON_TESTNET_RPC: envalid.url({ default: "" }),
+    CHAIN_TON_RPC: envalid.url(),
+    CHAIN_TON_REST_API: envalid.url(),
+    CHAIN_TON_TESTNET_REST_API: envalid.url(),
 })
 export const MAINNET_TOKENS: ITokenMetaData[] = [
     {
@@ -58,6 +61,15 @@ export const MAINNET_TOKENS: ITokenMetaData[] = [
         symbol: "USDT",
         address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
         emoji: "♻️"
+    },
+    {
+        chainId: "ton",
+        decimals: 9,
+        name: "Ton",
+        symbol: "TON",
+        address: "ton",
+        emoji: "💎",
+        isNative: true
     }
 ]
 export const TESTNET_TOKENS: ITokenMetaData[] = [
@@ -78,6 +90,15 @@ export const TESTNET_TOKENS: ITokenMetaData[] = [
         symbol: "ETH",
         address: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         emoji: "💠"
+    },
+    {
+        chainId: "ton-testnet",
+        decimals: 9,
+        name: "Ton",
+        symbol: "tTON",
+        address: "ton-testnet",
+        emoji: "💎",
+        isNative: true
     }
 ]
 export const DEFAULT_TOKENS: ITokenMetaData[] = envconfig.ENABLE_TESTNETS ? [...MAINNET_TOKENS, ...TESTNET_TOKENS] : MAINNET_TOKENS
@@ -118,6 +139,22 @@ export const TESTNET_CHAINS: IChain[] = [
             url: "https://shasta.tronscan.org/#",
         },
     },
+    {
+        chainId: "ton-testnet",
+        emoji: "💎",
+        name: "tToncoin",
+        symbol: "tTON",
+        nativeTokenAddress: "ton-testnet",
+        nativeTokenDecimal: 9,
+        rpc: envconfig.CHAIN_TON_TESTNET_RPC,
+        restApi: envconfig.CHAIN_TON_TESTNET_REST_API,
+        coingeckoId: "the-open-network",
+        explorer: {
+            accountPath: "/address/",
+            txPath: "/tx/",
+            url: "https://testnet.tonscan.org",
+        },
+    },
 ]
 export const MAINNET_CHAINS: IChain[] = [
     {
@@ -154,6 +191,22 @@ export const MAINNET_CHAINS: IChain[] = [
             txPath: "/transaction/",
             url: "https://tronscan.org/#",
         },
-    }
+    },
+    {
+        chainId: "ton",
+        emoji: "💎",
+        name: "Toncoin",
+        symbol: "TON",
+        nativeTokenAddress: "ton", //EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c
+        nativeTokenDecimal: 9,
+        rpc: envconfig.CHAIN_TON_RPC,
+        restApi: envconfig.CHAIN_TON_REST_API,
+        coingeckoId: "the-open-network",
+        explorer: {
+            accountPath: "/address/",
+            txPath: "/tx/",
+            url: "https://tonscan.org",
+        },
+    },
 ]
 export const DEFAULT_CHAINS: IChain[] = envconfig.ENABLE_TESTNETS ? [...TESTNET_CHAINS, ...MAINNET_CHAINS] : MAINNET_CHAINS

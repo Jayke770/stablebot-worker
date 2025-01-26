@@ -12,7 +12,7 @@ export interface IUser {
 export interface IWallet {
     address: string
     mnemonic: string,
-    type: "evm" | "tron"
+    type: "evm" | "tron" | "ton"
 }
 export interface IUserToken extends ITokenMetaData {
     userId: number,
@@ -48,6 +48,7 @@ export interface IChain {
         apiEndpoint?: string;
     };
     rpc: string;
+    restApi?: string,
     nativeTokenAddress?: string;
     nativeTokenDecimal: number;
     geckoTerminalId?: string;
