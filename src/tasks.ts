@@ -41,7 +41,7 @@ class Tasks {
                         if (wallet) {
                             const [tokenData, tokenInfo] = await Promise.all([
                                 tronHandler.getTokenBalance(wallet.address, token),
-                                dexHandler.getTokenInfo(token.chainId, token.address)
+                                token?.symbol.toLowerCase().includes("usdt") ? { priceUSD: "1" } : dexHandler.getTokenInfo(token.chainId, token.address)
                             ])
                             token.balance = tokenData.balance
                             token.usdValue = utils.unitToUsd(tokenData.balance, parseFloat(tokenInfo.priceUSD || "0"))

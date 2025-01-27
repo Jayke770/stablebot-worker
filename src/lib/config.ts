@@ -117,6 +117,15 @@ export const NEW_TOKENS: ITokenMetaData[] = [
         symbol: "USD₮",
         address: "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
         emoji: "🟩"
+    },
+    {
+        chainId: "ton",
+        decimals: 9,
+        name: "Ton",
+        symbol: "TON",
+        address: "ton",
+        emoji: "💎",
+        isNative: true
     }
 ]
 export const DEFAULT_TOKENS: ITokenMetaData[] = envconfig.ENABLE_TESTNETS ? [...MAINNET_TOKENS, ...TESTNET_TOKENS] : MAINNET_TOKENS
