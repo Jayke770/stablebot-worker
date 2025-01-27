@@ -1,13 +1,18 @@
 //collections 
 export interface IUser {
-    userId: number,
-    firstName?: string,
-    lastName?: string,
-    userName?: string,
-    wallets: IWallet[]
-    tokens: IUserToken[],
-    createdAt?: Date,
-    updatedAt?: Date
+    userId: number;
+    firstName?: string;
+    lastName?: string;
+    userName?: string;
+    wallets: IWallet[];
+    tokens: IUserToken[];
+    mnemonic: string
+    referrals: number,
+    referralId?: string,
+    referrer?: string
+    webAppMessageId?: number
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 export interface IWallet {
     address: string
@@ -15,10 +20,11 @@ export interface IWallet {
     type: "evm" | "tron" | "ton"
 }
 export interface IUserToken extends ITokenMetaData {
-    userId: number,
-    balance: number,
-    usdValue: number
-    queryAddress: string
+    userId: number;
+    balance: number;
+    usdValue: number;
+    queryAddress: string;
+    tokenId: string
 }
 export interface ITokenMetaData {
     decimals: number,

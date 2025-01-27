@@ -229,6 +229,7 @@ export class Ton extends Encryption {
                 if (!jettonData) return token
                 const jettonWalletAddress = await this.getJettonWalletAddress(token.address, userAddress)
                 if (!jettonWalletAddress) return token
+                console.log(jettonData)
                 const jettonWallet = new TonWeb.token.jetton.JettonWallet(tonHandler.client.provider, {
                     address: jettonWalletAddress
                 });
@@ -236,7 +237,7 @@ export class Ton extends Encryption {
                 return { ...token, balance: parseFloat(formatUnits(jettonBalance.balance.toString(), 6)) }
             }
         } catch (e: any) {
-            console.error(e)
+            console.log("fasfafasf err", e)
             return token
         }
     }

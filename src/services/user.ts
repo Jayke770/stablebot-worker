@@ -1,4 +1,4 @@
-import type { Types } from "mongoose";
+import type { RootFilterQuery, Types, UpdateQuery, UpdateWithAggregationPipeline } from "mongoose";
 import { DEFAULT_TOKENS } from "../lib/config"
 import { userData, userToken } from "../models/collections"
 import type { IUser, IUserToken, IWallet } from "../types"
@@ -40,6 +40,13 @@ export class User {
             queryAddress: { $eq: tokenAddress.trim().toLowerCase() }
         }).lean()
         return token
+    }
+    async updateUser(filter: RootFilterQuery<IUser>, update: UpdateWithAggregationPipeline | UpdateQuery<IUser>) {
+        try {
+            await userData.updateOne(filter, update)
+        } catch (e) {
+            console.error(e)
+        }
     }
 }
 export const userHandler = new User()

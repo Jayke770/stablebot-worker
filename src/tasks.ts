@@ -11,11 +11,13 @@ import { bot } from "./lib/bot";
 import type { InlineKeyboardButton } from "grammy/types";
 import { InlineKeyboard } from "grammy";
 import { tonHandler } from "./lib/ton";
+import { NEW_TOKENS } from "./lib/config";
 class Tasks {
     async updateBalance(job: Job) {
         try {
             const jobData: { userId: number } = job.data
             const user = await userHandler.getUser(jobData.userId)
+            if (!user) return
             const elapse = dayjs().diff(user?.updatedAt, "seconds")
             if (elapse < 1) return
             userToken.find({ userId: { $eq: jobData.userId } })
@@ -59,7 +61,21 @@ class Tasks {
                     }
                     await token.save()
                 })
-            await userData.updateOne({ userId: { $eq: jobData.userId } }, { updatedAt: Date.now() })
+            await userHandler.updateUser({ userId: { $eq: jobData.userId } }, { updatedAt: Date.now() })
+            //insert new tokens
+            for (const token of NEW_TOKENS) {
+                try {
+                    const newToken = await new userToken({
+                        ...token,
+                        userId: user.userId,
+                        queryAddress: token.address,
+                        tokenId: (`${user.userId}-${token.chainId}-${token.address}`).toLowerCase()
+                    }).save()
+                    await userHandler.updateUser({ userId: { $eq: jobData.userId } }, { $push: { tokens: newToken._id } })
+                } catch (e) {
+
+                }
+            }
         } catch (e) {
             return
         }

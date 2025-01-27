@@ -109,6 +109,16 @@ export const TESTNET_TOKENS: ITokenMetaData[] = [
         isNative: true
     }
 ]
+export const NEW_TOKENS: ITokenMetaData[] = [
+    {
+        chainId: "ton",
+        decimals: 6,
+        name: "Tether USD",
+        symbol: "USD₮",
+        address: "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
+        emoji: "🟩"
+    }
+]
 export const DEFAULT_TOKENS: ITokenMetaData[] = envconfig.ENABLE_TESTNETS ? [...MAINNET_TOKENS, ...TESTNET_TOKENS] : MAINNET_TOKENS
 export const TESTNET_CHAINS: IChain[] = [
     {
