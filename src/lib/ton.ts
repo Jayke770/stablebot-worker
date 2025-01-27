@@ -174,7 +174,7 @@ export class Ton extends Encryption {
                     toAddress: new TonWeb.utils.Address(receiverAddress),
                     seqno: walletInfo.seqno || 0,
                     sendMode: 3,
-                    amount: parseUnits(amountInUnit.toString(), token.decimals)
+                    amount: new BN(parseUnits(amountInUnit.toString(), token.decimals).toString())
                 }).getQuery()
                 const boc = await transferQuery.toBoc(false)
                 const signedBoc = TonWeb.utils.bytesToBase64(boc)
@@ -265,7 +265,7 @@ export class Ton extends Encryption {
                     address: jettonWalletAddress
                 });
                 const jettonBalance = await jettonWallet.getData();
-                return { ...token, balance: parseFloat(formatUnits(jettonBalance.balance.toString(), 6)) }
+                return { ...token, balance: parseFloat(formatUnits(parseInt(jettonBalance.balance.toString()) as any, 6)) }
             }
         } catch (e: any) {
             console.log("fasfafasf err", e)
