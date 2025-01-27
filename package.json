@@ -10,6 +10,7 @@
     "test": "npx ts-node test.ts"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.1.6",
     "@types/lodash": "^4.17.14",
     "@types/node": "^22.10.2",
     "ts-node-dev": "^2.0.0",
@@ -20,6 +21,7 @@
     "@ton/core": "^0.59.1",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.1.0",
+    "bn.js": "^5.2.1",
     "buffer": "^6.0.3",
     "bullmq": "^5.34.5",
     "dayjs": "^1.11.13",

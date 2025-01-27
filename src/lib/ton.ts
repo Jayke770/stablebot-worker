@@ -21,6 +21,7 @@ import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
 import { utils } from "./utils";
 import { z } from 'zod'
 import { parseUnits, formatUnits } from "viem";
+import BN from 'bn.js'
 const getBalanceResponse = z.object({
     ok: z.boolean(),
     result: z.string()
@@ -189,7 +190,37 @@ export class Ton extends Encryption {
                     fee
                 };
             } else {
-                return { status: false, message: `❌ Not yet implemented`, txHash: "", fee: 0 };
+                const jettonWalletAddress = await this.getJettonWalletAddress(token.address, walletAddress)
+                if (!jettonWalletAddress) return { status: false, message: `❌ Invalid Jetton`, txHash: "", fee: 0 };
+                const jettonWallet = new TonWeb.token.jetton.JettonWallet(tonHandler.client.provider, {
+                    address: jettonWalletAddress
+                });
+                const transferQuery = await wallet.methods.transfer({
+                    secretKey: keyPair.secretKey,
+                    toAddress: jettonWalletAddress,
+                    amount: this.client.utils.toNano("0.02"),
+                    seqno: walletInfo.seqno || 0,
+                    payload: await jettonWallet.createTransferBody({
+                        toAddress: new this.client.utils.Address(receiverAddress),
+                        responseAddress: new this.client.utils.Address(walletAddress),
+                        //@ts-ignore
+                        jettonAmount: new BN(parseUnits(amountInUnit.toString(), token.decimals).toString())
+                    }),
+                    sendMode: 3,
+                }).getQuery()
+                const boc = await transferQuery.toBoc(false)
+                const signedBoc = TonWeb.utils.bytesToBase64(boc)
+                const estFee = await this.estimateFee(walletAddress, signedBoc)
+                if (!estFee) return { status: false, message: "❌ Tx Failed", txHash: "", fee: 0 };
+                const fee = parseFloat(formatUnits(BigInt(estFee.source_fees.fwd_fee + estFee.source_fees.storage_fee + estFee.source_fees.gas_fee + estFee.source_fees.in_fwd_fee), this.chainData?.nativeTokenDecimal || 9))
+                const tx = await this.sendBoc(signedBoc)
+                if (!tx) return { status: false, message: `❌ Tx Failed`, txHash: "", fee: 0 };
+                return {
+                    status: true,
+                    message: "",
+                    txHash: this.base64ToHex(tx.hash),
+                    fee
+                };
             }
         } catch (e: any) {
             console.error("ton transfer", e)
