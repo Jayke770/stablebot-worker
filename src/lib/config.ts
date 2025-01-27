@@ -70,7 +70,15 @@ export const MAINNET_TOKENS: ITokenMetaData[] = [
         address: "ton",
         emoji: "💎",
         isNative: true
-    }
+    },
+    {
+        chainId: "ton",
+        decimals: 6,
+        name: "Tether USD",
+        symbol: "USD₮",
+        address: "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
+        emoji: "🟩"
+    },
 ]
 export const TESTNET_TOKENS: ITokenMetaData[] = [
     {
