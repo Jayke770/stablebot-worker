@@ -12,6 +12,8 @@ new Worker('main',
             case "sendMessage":
                 await tasksHandler.bot.sendMessage(job)
                 break
+            case "bridge":
+                break
             default:
                 break;
         }

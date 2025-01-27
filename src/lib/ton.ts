@@ -1,5 +1,5 @@
 import "buffer"
-import type { IBroadcastTx, IChain, IUserToken, IWallet } from "../types";
+import type { IBroadcastTx, IChain, ITokenMetaData, IUserToken, IWallet } from "../types";
 import { Encryption } from "./encryption";
 import {
     TonClient,
@@ -17,7 +17,7 @@ import {
     storeMessage
 } from "@ton/ton";
 import TonWeb from "tonweb";
-import { mnemonicToPrivateKey } from "@ton/crypto";
+import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
 import { utils } from "./utils";
 import { z } from 'zod'
 import { parseUnits, formatUnits } from "viem";
@@ -31,8 +31,8 @@ const getWalletInformationResponse = z.object({
         wallet: z.boolean(),
         balance: z.string(),
         account_state: z.union([z.literal("uninitialized"), z.literal("active")]),
-        wallet_type: z.string().optional(),
-        seqno: z.number().default(0),
+        wallet_type: z.string().nullable(),
+        seqno: z.number().nullable().default(0),
         last_transaction_id: z.object({
             "@type": z.string(),
             lt: z.string(),
@@ -63,9 +63,50 @@ const sendBocResponse = z.object({
         "@extra": z.string()
     })
 })
+const getJettonDataResponse = z.object({
+    ok: z.boolean(),
+    result: z.object({
+        total_supply: z.number(),
+        mintable: z.boolean(),
+        admin_address: z.string(),
+        jetton_content: z.object({
+            type: z.string(),
+            data: z.object({
+                uri: z.string(),
+                decimals: z.string()
+            })
+        }),
+        jetton_wallet_code: z.string(),
+        contract_type: z.string(),
+    })
+})
+
+const getJettonWalletAddressResponse = z.object({
+    ok: z.boolean(),
+    result: z.object({
+        "@type": z.literal("smc.runResult"),
+        gas_used: z.number(),
+        stack: z.array(z.tuple([
+            z.literal("cell"),
+            z.object({
+                bytes: z.string(),
+                object: z.object({
+                    data: z.object({
+                        b64: z.string(),
+                        len: z.number()
+                    }),
+                    refs: z.array(z.any()),
+                    special: z.boolean()
+                }).optional()
+            })
+        ])),
+        exit_code: z.number(),
+        "@extra": z.string()
+    })
+})
 export class Ton extends Encryption {
     private chainData?: IChain;
-    private client: TonWeb
+    client: TonWeb
     constructor() {
         super()
         this.chainData = utils.getChain("ton");
@@ -74,7 +115,7 @@ export class Ton extends Encryption {
     setChain(chainId: string) {
         const chainData = utils.getChain(chainId);
         this.chainData = chainData
-        this.client = new TonWeb(new TonWeb.HttpProvider(this.chainData?.rpc))
+        this.client = new TonWeb(new TonWeb.HttpProvider(chainData?.rpc))
     }
     base64ToHex = (str: string) => {
         const raw = atob(str);
@@ -86,7 +127,28 @@ export class Ton extends Encryption {
         }
 
         return result;
-    };
+    }
+
+    readIntFromBitString = (bs: any, cursor: number, bits: number) => {
+        let n = BigInt(0);
+        for (let i = 0; i < bits; i++) {
+            n *= BigInt(2);
+            n += BigInt(bs.get(cursor + i));
+        }
+        return n;
+    }
+
+    parseAddress = (cell: any) => {
+        let n = this.readIntFromBitString(cell.bits, 3, 8);
+        if (n > BigInt(127)) {
+            n = n - BigInt(256);
+        }
+        const hashPart = this.readIntFromBitString(cell.bits, 3 + 8, 256);
+        if (n.toString(10) + ":" + hashPart.toString(16) === '0:0') return null;
+        const s = n.toString(10) + ":" + hashPart.toString(16).padStart(64, '0');
+        return new TonWeb.Address(s);
+    }
+
     async createWallet(mnemonic: string): Promise<IWallet> {
         const keyPair = await mnemonicToPrivateKey(mnemonic.split(" "));
         const wallet = new TonWeb.Wallets.all.v4R2(this.client.provider, { publicKey: keyPair.publicKey, wc: 0 })
@@ -104,13 +166,12 @@ export class Ton extends Encryption {
             const wallet = new TonWeb.Wallets.all.v4R2(this.client.provider, { publicKey: keyPair.publicKey, wc: 0 })
             const walletAddress = (await wallet.getAddress()).toString(true, true, false)
             const walletInfo = await this.getWalletInformation(walletAddress)
-            if (!walletInfo) return { status: false, message: "❌ Tx Failed", txHash: "", fee: 0 };
+            if (!walletInfo) return { status: false, message: "❌ Tx Failed: 0xw", txHash: "", fee: 0 };
             if (token.isNative) {
-                if (walletInfo.account_state !== "active") await wallet.deploy(keyPair.secretKey).send()
                 const transferQuery = await wallet.methods.transfer({
                     secretKey: keyPair.secretKey,
                     toAddress: new TonWeb.utils.Address(receiverAddress),
-                    seqno: walletInfo.seqno,
+                    seqno: walletInfo.seqno || 0,
                     sendMode: 3,
                     amount: parseUnits(amountInUnit.toString(), token.decimals)
                 }).getQuery()
@@ -159,13 +220,21 @@ export class Ton extends Encryption {
             if (token.isNative) {
                 const endpoint = new URL(`${this.chainData?.restApi}/getAddressBalance?address=${userAddress}`)
                 const response = await fetch(endpoint).then(e => e.json()).catch(e => undefined)
-                console.log("fasfa", response)
                 const balance = getBalanceResponse.safeParse(response)
                 if (!balance.success) return token
                 if (!balance.data.ok) return token
                 return { ...token, balance: parseFloat(fromNano(balance.data.result)) }
+            } else {
+                const jettonData = await this.getJettonData(token.address)
+                if (!jettonData) return token
+                const jettonWalletAddress = await this.getJettonWalletAddress(token.address, userAddress)
+                if (!jettonWalletAddress) return token
+                const jettonWallet = new TonWeb.token.jetton.JettonWallet(tonHandler.client.provider, {
+                    address: jettonWalletAddress
+                });
+                const jettonBalance = await jettonWallet.getData();
+                return { ...token, balance: parseFloat(formatUnits(jettonBalance.balance.toString(), 6)) }
             }
-            return token
         } catch (e: any) {
             console.error(e)
             return token
@@ -177,6 +246,7 @@ export class Ton extends Encryption {
             const response = await fetch(endpoint).then(e => e.json()).catch(e => undefined)
             console.log("wallet info", response)
             const walletInfo = getWalletInformationResponse.safeParse(response)
+            console.log(walletInfo.error)
             if (!walletInfo.success) return null
             if (!walletInfo.data.ok) return null
             return walletInfo.data.result
@@ -188,6 +258,7 @@ export class Ton extends Encryption {
     async estimateFee(address: string, body: string): Promise<z.infer<typeof estimateFeeResponse>['result'] | null> {
         try {
             const endpoint = new URL(`${this.chainData?.restApi}/estimateFee`)
+            console.log("feeeee", endpoint.toString())
             const response = await fetch(endpoint, {
                 method: "post",
                 headers: {
@@ -208,6 +279,40 @@ export class Ton extends Encryption {
             console.error("wallet info", e)
             return null
         }
+    }
+    async getJettonData(tokenAddress: string): Promise<z.infer<typeof getJettonDataResponse>['result'] | null> {
+        try {
+            const endpoint = new URL(`${this.chainData?.restApi}/getTokenData?address=${tokenAddress}`)
+            const response = await fetch(endpoint).then(e => e.json()).catch(e => undefined)
+            const jettonData = getJettonDataResponse.safeParse(response)
+            if (!jettonData.success) return null
+            if (!jettonData.data.ok) return null
+            return jettonData.data.result
+        } catch (e) {
+            console.log(e)
+            return null
+        }
+    }
+    async getJettonWalletAddress(tokenAddress: string, ownerAddress: string) {
+        const cell = new TonWeb.boc.Cell()
+        cell.bits.writeAddress(new TonWeb.utils.Address(ownerAddress))
+        const body = {
+            address: tokenAddress,
+            method: "get_wallet_address",
+            stack: [
+                ["tvm.Slice", TonWeb.utils.bytesToBase64(await cell.toBoc(false))]
+            ]
+        }
+        const endpoint = new URL(`${this.chainData?.restApi}/runGetMethod`)
+        const response = await fetch(endpoint, {
+            method: "post",
+            body: JSON.stringify(body)
+        }).then(e => e.json()).catch(e => undefined)
+        const walletData = getJettonWalletAddressResponse.safeParse(response)
+        if (!walletData.success) return null
+        if (!walletData.data.ok) return null
+        const cellAddress = TonWeb.boc.Cell.oneFromBoc(TonWeb.utils.base64ToBytes(walletData.data.result.stack[0][1].bytes))
+        return tonHandler.parseAddress(cellAddress)
     }
 }
 export const tonHandler = new Ton()

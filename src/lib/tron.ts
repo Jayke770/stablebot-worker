@@ -2,6 +2,8 @@ import { TronWeb } from 'tronweb'
 import type { IBroadcastTx, IChain, IUserToken, IWallet } from '../types'
 import { Encryption } from "./encryption"
 import { utils } from './utils'
+import { formatUnits } from 'viem'
+import { ERC20_ABI } from './abi'
 export class Tron extends Encryption {
     private tronweb: TronWeb
     private chainData?: IChain
@@ -34,16 +36,21 @@ export class Tron extends Encryption {
     async getTokenBalance(userAddress: string, token: IUserToken): Promise<IUserToken> {
         try {
             if (token.isNative) {
-                //@ts-ignore
-                const balanceInWei = await this.tronweb.trx.getBalance(userAddress)
-                const balance = parseFloat(this.tronweb.fromSun(balanceInWei).toString())
-                return { ...token, balance }
+                const balanceInWei = await this.tronweb.trx.getBalance(userAddress);
+                const balance = parseFloat(this.tronweb.fromSun(balanceInWei).toString());
+                return { ...token, balance };
             } else {
-                return token
+                this.tronweb.setAddress(userAddress)
+                const contract = tronHandler.tronweb.contract(ERC20_ABI, token.address)
+                const [decimals, balanceInWei]: bigint[] = await Promise.all([
+                    contract.methods.decimals().call(),
+                    contract.methods.balanceOf(userAddress).call()
+                ]) as any
+                const balance = parseFloat(formatUnits(balanceInWei, parseInt(`${decimals}`)))
+                return { ...token, balance };
             }
         } catch (e) {
-            console.error(e)
-            return token
+            return token;
         }
     }
     async transferToken(token: IUserToken, wallet: IWallet): Promise<IBroadcastTx> {
