@@ -16,12 +16,12 @@ import {
     beginCell,
     storeMessage
 } from "@ton/ton";
+import BN from 'bn.js'
 import TonWeb from "tonweb";
 import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
 import { utils } from "./utils";
 import { z } from 'zod'
 import { parseUnits, formatUnits } from "viem";
-import BN from 'bn.js'
 const getBalanceResponse = z.object({
     ok: z.boolean(),
     result: z.string()
@@ -32,7 +32,7 @@ const getWalletInformationResponse = z.object({
         wallet: z.boolean(),
         balance: z.string(),
         account_state: z.union([z.literal("uninitialized"), z.literal("active")]),
-        wallet_type: z.string().nullable(),
+        wallet_type: z.string().nullish(),
         seqno: z.number().nullable().default(0),
         last_transaction_id: z.object({
             "@type": z.string(),
@@ -105,6 +105,40 @@ const getJettonWalletAddressResponse = z.object({
         "@extra": z.string()
     })
 })
+const getTransactionsResponse = z.array(z.object({
+    "@type": z.literal("raw.transaction"),
+    address: z.object({
+        "@type": z.literal("accountAddress"),
+        account_address: z.string(),
+    }),
+    utime: z.number(),
+    data: z.string(),
+    transaction_id: z.object({
+        "@type": z.literal("internal.transactionId"),
+        lt: z.string(),
+        hash: z.string()
+    }),
+    fee: z.string(),
+    storage_fee: z.string(),
+    other_fee: z.string(),
+    in_msg: z.object({
+        "@type": z.literal("raw.message"),
+        source: z.string(),
+        destination: z.string(),
+        value: z.string(),
+        fwd_fee: z.string(),
+        ihr_fee: z.string(),
+        created_lt: z.string(),
+        body_hash: z.string(),
+        msg_data: z.object({
+            "@type": z.literal("msg.dataRaw"),
+            body: z.string(),
+            init_state: z.string(),
+        }),
+        message: z.string(),
+    }),
+    out_msgs: z.array(z.any())
+}))
 export class Ton extends Encryption {
     private chainData?: IChain;
     client: TonWeb
@@ -160,7 +194,7 @@ export class Ton extends Encryption {
             type: 'ton'
         }
     }
-    async transferToken({ amountInUnit, receiverAddress, userWallet, token, useMax }: { userWallet: IWallet, token: IUserToken, receiverAddress: string, amountInUnit: number, useMax?: boolean }): Promise<IBroadcastTx> {
+    async transferToken({ amountInUnit, receiverAddress, userWallet, token, useMax }: { userWallet: IWallet, token: ITokenMetaData, receiverAddress: string, amountInUnit: number, useMax?: boolean }): Promise<IBroadcastTx> {
         try {
             const mnemonic = this.decrypt(userWallet.mnemonic);
             const keyPair = await mnemonicToPrivateKey(mnemonic.split(" "));
@@ -260,7 +294,6 @@ export class Ton extends Encryption {
                 if (!jettonData) return token
                 const jettonWalletAddress = await this.getJettonWalletAddress(token.address, userAddress)
                 if (!jettonWalletAddress) return token
-                console.log(jettonData)
                 const jettonWallet = new TonWeb.token.jetton.JettonWallet(tonHandler.client.provider, {
                     address: jettonWalletAddress
                 });
@@ -268,7 +301,7 @@ export class Ton extends Encryption {
                 return { ...token, balance: parseFloat(formatUnits(parseInt(jettonBalance.balance.toString()) as any, 6)) }
             }
         } catch (e: any) {
-            console.log("fasfafasf err", e)
+            console.error(e)
             return token
         }
     }
@@ -345,6 +378,30 @@ export class Ton extends Encryption {
         if (!walletData.data.ok) return null
         const cellAddress = TonWeb.boc.Cell.oneFromBoc(TonWeb.utils.base64ToBytes(walletData.data.result.stack[0][1].bytes))
         return tonHandler.parseAddress(cellAddress)
+    }
+    async waitForTx(
+        address: string,
+        txHash: string,
+        timeout: number = 30000,
+        interval: number = 1000
+    ) {
+        const startTime = Date.now();
+        while (Date.now() - startTime < timeout) {
+            try {
+                // Get transactions with matching hash
+                const txnsData = await this.client.getTransactions(address, 1, undefined, txHash, 0);
+                const tx = getTransactionsResponse.safeParse(txnsData)
+                if (tx.success) {
+                    if (tx.data.length > 0) {
+                        return tx.data[0];
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking transaction:', error);
+            }
+            await Bun.sleep(interval)
+        }
+        return null
     }
 }
 export const tonHandler = new Ton()

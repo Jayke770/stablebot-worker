@@ -1,7 +1,7 @@
 import { config } from 'dotenv'
 if (process.env.NODE_ENV !== "production") config()
 import * as envalid from 'envalid'
-import type { IChain, ITokenMetaData, IWallet } from '../types'
+import type { IChain, INotificationGc, ITokenMetaData, IWallet } from '../types'
 export const envconfig = envalid.cleanEnv(process.env, {
     ENABLE_TESTNETS: envalid.bool({ default: true }),
     PORT: envalid.num({ default: 3000 }),
@@ -107,26 +107,41 @@ export const TESTNET_TOKENS: ITokenMetaData[] = [
         address: "ton-testnet",
         emoji: "💎",
         isNative: true
-    }
-]
-export const NEW_TOKENS: ITokenMetaData[] = [
-    {
-        chainId: "ton",
-        decimals: 6,
-        name: "Tether USD",
-        symbol: "USD₮",
-        address: "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
-        emoji: "💎"
     },
     {
-        chainId: "ton",
-        decimals: 9,
-        name: "Ton",
-        symbol: "TON",
-        address: "ton",
-        emoji: "💎",
-        isNative: true
-    }
+        chainId: "84532",
+        decimals: 18,
+        name: "Tether USD",
+        symbol: "tUSDT",
+        address: "0xFef60935743c16722314312b7eDA34Ee14aCf961",
+        emoji: "♻️"
+    },
+    {
+        chainId: "shasta",
+        decimals: 6,
+        name: "Tether USD",
+        symbol: "tUSDT",
+        address: "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs",
+        emoji: "🟩"
+    },
+]
+export const STABLE_TOKEN_ADDRESS = [
+    "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+    "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
+    "0xFef60935743c16722314312b7eDA34Ee14aCf961",
+    "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs"
+].map(e => e.toLowerCase().trim())
+export const BRIDGE_CONFIG_ID = "bridge-config-1"
+export const SUCCESS_EFFECT_IDS = [
+    "5104841245755180586", // 🔥
+    "5107584321108051014",  // 👍
+    "5046509860389126442",  // 🎉
+]
+
+export const FAIL_EFFECT_IDS = [
+    "5104858069142078462",  // 👎
+    "5046589136895476101",  // 💩
 ]
 export const DEFAULT_TOKENS: ITokenMetaData[] = envconfig.ENABLE_TESTNETS ? [...MAINNET_TOKENS, ...TESTNET_TOKENS] : MAINNET_TOKENS
 export const TESTNET_CHAINS: IChain[] = [
@@ -237,3 +252,17 @@ export const MAINNET_CHAINS: IChain[] = [
     },
 ]
 export const DEFAULT_CHAINS: IChain[] = envconfig.ENABLE_TESTNETS ? [...TESTNET_CHAINS, ...MAINNET_CHAINS] : MAINNET_CHAINS
+
+export const NOTIFICATIONS: INotificationGc = {
+    withdrawals: [
+        {
+            gcId: -1001582238672,
+            threadId: 149821
+        }
+    ],
+    bridge: [
+        {
+            gcId: -1001582238672
+        }
+    ]
+}

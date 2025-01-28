@@ -1,12 +1,11 @@
 import { Schema, model } from 'mongoose'
-import type { IUser, IUserToken } from "../types"
+import type { IBridge, IBridgeConfigs, IUser, IUserToken } from "../types"
 const userSchema = new Schema<IUser>({
     userId: { type: Number, required: true, index: { unique: true } },
     firstName: { default: undefined, type: String },
     lastName: { type: String, default: undefined },
     userName: { type: String, default: undefined },
     wallets: [],
-    tokens: [{ type: Schema.Types.ObjectId, ref: "userToken" }],
     mnemonic: { type: String, required: true },
     referrals: { type: Number, default: 0 },
     referrer: { type: String },
@@ -34,3 +33,37 @@ const userTokenSchema = new Schema<IUserToken>({
     timestamps: true
 })
 export const userToken = model("userToken", userTokenSchema)
+const bridgeSchema = new Schema<IBridge>({
+    bridgeId: { type: String, unique: true, index: { unique: true } },
+    srcChainId: { type: String, required: true },
+    destChainId: { type: String, required: true },
+    srcToken: { type: Object, required: true },
+    destToken: { type: Object, required: true },
+    srcSeconds: { type: Number, default: 0 },
+    destSeconds: { type: Number, default: 0 },
+    userId: { type: Number, required: true },
+    dpTxHash: { type: String, required: true },
+    wdTxHash: { type: String, default: null },
+    srcTokenAmountInUsd: { type: Number, required: true },
+    srcTokenAmountInUnit: { type: Number, required: true },
+    destTokenAmountInUsd: { type: Number, default: 0 },
+    destTokenAmountInUnit: { type: Number, default: 0 },
+    senderAddress: { type: String, required: true },
+    receiverAddress: { type: String, required: true },
+    messageId: { type: Number, required: true },
+    srcFeeAmountInUnit: { type: Number, default: 0 },
+    destFeeAmountInUnit: { type: Number, default: 0 },
+    status: { type: String, default: "pending", enum: ["pending", "completed"] },
+    messageData: { type: String, default: "" }
+}, {
+    timestamps: true
+})
+export const bridge = model("bridge", bridgeSchema)
+
+const bridgeConfigSchema = new Schema<IBridgeConfigs>({
+    mnemonic: { type: String, required: true },
+    totalBridgeTx: { type: Number, default: 0 },
+    wallets: [],
+    configId: { type: String, unique: true, index: { unique: true } }
+})
+export const bridgeConfig = model("bridgeConfig", bridgeConfigSchema)
