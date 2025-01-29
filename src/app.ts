@@ -29,7 +29,7 @@ new Worker('main',
         await taskQueue.upsertJobScheduler(
             'recover-failed-bridge',
             {
-                every: 60000,
+                every: 1000,
             },
             {
                 name: ITasks.retryFailedBridge

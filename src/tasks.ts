@@ -89,7 +89,8 @@ class Tasks {
     async scanFailedBridge() {
         try {
             bridge.find({ status: { $eq: "pending" } }).cursor().eachAsync(async function (bridge) {
-                const jobData = await taskQueue.getJob("fasf")
+                const jobData = await taskQueue.getJob(bridge.bridgeId)
+                console.log("f", jobData)
                 if (!jobData) await taskQueue.add(ITasks.bridge, { bridgeId: bridge.bridgeId }, { jobId: bridge.bridgeId })
             })
         } catch (e) {
