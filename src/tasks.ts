@@ -135,21 +135,27 @@ class Tasks {
                 console.info(`Bridge ${jobData.bridgeId} chain native token not found`)
                 return
             }
+            if (!bridgeWallet) {
+                console.info(`Bridge wallet invalid ${jobData.bridgeId}`)
+                return
+            }
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Processing..")}`)
             //get deposit tx 
             const txReceipt = await web3Handler.waitForTx({ chainId: bridgeData.srcChainId, txHash: bridgeData.dpTxHash })
             console.log("dp tx receipt", txReceipt)
-            if (bridgeData.senderAddress.toLowerCase().trim() !== txReceipt.fromAddress.toLowerCase().trim()) {
-                console.info(`Invalid Sender ${jobData.bridgeId}`)
-                return
-            }
-            if (bridgeWallet?.address.toLowerCase().trim() !== txReceipt.toAddress.toLowerCase().trim()) {
-                console.info(`Invalid Sender ${jobData.bridgeId}`)
-                return
-            }
-            if (bridgeData.srcTokenAmountInUnit < txReceipt.tokenAmountInUnit) {
-                console.info(`Invalid Src Amount${jobData.bridgeId}`)
-                return
+            if (utils.isTON(bridgeData.srcChainId)) {
+                if (bridgeData.senderAddress.toLowerCase().trim() !== txReceipt.fromAddress.toLowerCase().trim()) {
+                    console.info(`Invalid Sender ${jobData.bridgeId}`)
+                    return
+                }
+                if (bridgeWallet?.address.toLowerCase().trim() !== txReceipt.toAddress.toLowerCase().trim()) {
+                    console.info(`Invalid Sender ${jobData.bridgeId}`)
+                    return
+                }
+                if (bridgeData.srcTokenAmountInUnit < txReceipt.tokenAmountInUnit) {
+                    console.info(`Invalid Src Amount${jobData.bridgeId}`)
+                    return
+                }
             }
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Sending...")}`)
             //validation pass 
