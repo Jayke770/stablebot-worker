@@ -1,6 +1,10 @@
 //@ts-nocheck
 import mongoose from "mongoose";
 import { envconfig } from "../lib/config";
+let cached = global.mongoose;
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
+}
 async function dbConnect() {
     try {
         const opts = {
