@@ -42,9 +42,8 @@ export class EVM extends Encryption {
     async getTokenBalance(userAddress: `0x${string}`, token: IUserToken): Promise<IUserToken> {
         try {
             if (token.isNative) {
-                //@ts-ignore
-                const balanceInWei = await this.client.getBalance({ address: userAddress, blockTag: "safe" });
-                const balance = parseFloat(formatEther(balanceInWei));
+                const balanceInWei = await this.client.getBalance({ address: userAddress });
+                const balance = Number(formatEther(balanceInWei));
                 return { ...token, balance };
             } else {
                 const [balanceInWei] = await this.client.multicall({

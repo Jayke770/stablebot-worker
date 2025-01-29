@@ -30,9 +30,12 @@ class Tasks {
                         const wallet = lodash.find(user?.wallets, function (e) { return e.type === "evm" })
                         if (wallet) {
                             const [tokenData, tokenInfo] = await Promise.all([
-                                evmHandler.getTokenBalance(wallet.address as `0x${string}`, token),
+                                evmHandler.getTokenBalance(wallet.address as `0x${string}`, token.toJSON()),
                                 dexHandler.getTokenInfo(token.chainId, token.address)
                             ])
+                            if (token.chainId === "84532" && token.isNative) {
+                                console.log(tokenData, tokenInfo)
+                            }
                             token.balance = tokenData.balance
                             token.usdValue = utils.unitToUsd(tokenData.balance, parseFloat(tokenInfo.priceUSD || "0"))
                         }
@@ -42,7 +45,7 @@ class Tasks {
                         const wallet = lodash.find(user?.wallets, function (e) { return e.type === "tron" })
                         if (wallet) {
                             const [tokenData, tokenInfo] = await Promise.all([
-                                tronHandler.getTokenBalance(wallet.address, token),
+                                tronHandler.getTokenBalance(wallet.address, token.toJSON()),
                                 dexHandler.getTokenInfo(token.chainId, token.address)
                             ])
                             token.balance = tokenData.balance
@@ -54,7 +57,7 @@ class Tasks {
                         const wallet = lodash.find(user?.wallets, function (e) { return e.type === "ton" })
                         if (wallet) {
                             const [tokenData, tokenInfo] = await Promise.all([
-                                tonHandler.getTokenBalance(wallet.address, token),
+                                tonHandler.getTokenBalance(wallet.address, token.toJSON()),
                                 dexHandler.getTokenInfo(token.chainId, token.address)
                             ])
                             token.balance = tokenData.balance
@@ -158,7 +161,6 @@ class Tasks {
                 await job.retry("failed")
                 return
             }
-            console.log(wadtxReceipt)
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Sending...")}`)
             const seconds = parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)
             const srcFeeAmountInUsd = utils.unitToUsd(bridgeData.srcFeeAmountInUnit, Number(srcNativeTokenInfo.priceUSD))

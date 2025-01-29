@@ -134,7 +134,7 @@ export class Tron extends Encryption {
             const tx = await this.tronweb.trx.getTransaction(txHash);
             if (tx?.ret?.[0]?.contractRet === "SUCCESS") {
                 const txInfo = await this.tronweb.trx.getTransactionInfo(txHash)
-                return { tx, txInfo }
+                if (txInfo) return { tx, txInfo }
             }
             } catch (error) {
 
