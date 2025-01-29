@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { envconfig } from "../lib/config";
 async function dbConnect() {
     try {
-        return await mongoose.connect(envconfig.MONGODB_URI, { bufferCommands: false, });
+        return await mongoose.connect(envconfig.MONGODB_URI, { bufferCommands: true, });
     } catch (e) {
         console.log(e)
     }
