@@ -26,15 +26,6 @@ new Worker('main',
 )
     .on("ready", async () => {
         await dbConnect()
-        await taskQueue.upsertJobScheduler(
-            'recover-failed-bridge',
-            {
-                every: 60000,
-            },
-            {
-                name: ITasks.retryFailedBridge
-            },
-        );
         console.log("Worker Started")
     })
     .on('completed', job => {
