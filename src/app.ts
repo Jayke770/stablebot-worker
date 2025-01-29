@@ -32,7 +32,7 @@ new Worker('main',
                 every: 60000,
             },
             {
-                name: ITasks.retryFailedBridge,
+                name: ITasks.retryFailedBridge
             },
         );
         console.log("Worker Started")
