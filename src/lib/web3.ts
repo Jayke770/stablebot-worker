@@ -49,7 +49,7 @@ class Web3Handler extends Utils {
             }
         }
     }
-    async waitForTx(params: { chainId: string, txHash: string }): Promise<IValidateBridgeTx> {
+    async waitForTx(params: { chainId: string, txHash: string, walletAddress?: string }): Promise<IValidateBridgeTx> {
         try {
             const chainData = this.getChain(params.chainId)
             if (this.isEVM(params.chainId)) {
@@ -139,6 +139,9 @@ class Web3Handler extends Utils {
                 }
             } else if (this.isTON(params.chainId)) {
                 tonHandler.setChain(params.chainId)
+                const txData = await tonHandler.waitForTx(params.walletAddress!, params.txHash)
+                //@ts-ignore
+                if (!txData) return { status: false, message: "❌ Tx Failed" }
                 //@ts-ignore
                 return { status: true, message: "" }
             } else {

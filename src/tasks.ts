@@ -1,7 +1,7 @@
 import { Job } from "bullmq";
 import { userHandler } from "./services/user";
 import dayjs from 'dayjs'
-import { userData, userToken } from "./models/collections";
+import { userData, userToken, bridge } from "./models/collections";
 import { utils } from "./lib/utils";
 import { evmHandler } from "./lib/evm";
 import * as lodash from 'lodash'
@@ -14,6 +14,8 @@ import { tonHandler } from "./lib/ton";
 import { bridgeHandler } from "./services/bridge";
 import { web3Handler } from "./lib/web3";
 import { NOTIFICATIONS, SUCCESS_EFFECT_IDS } from "./lib/config";
+import { taskQueue } from "./lib/worker.config";
+import { ITasks } from "./types";
 class Tasks {
     async updateBalance(job: Job) {
         try {
@@ -33,9 +35,6 @@ class Tasks {
                                 evmHandler.getTokenBalance(wallet.address as `0x${string}`, token.toJSON()),
                                 dexHandler.getTokenInfo(token.chainId, token.address)
                             ])
-                            if (token.chainId === "84532" && token.isNative) {
-                                console.log(tokenData, tokenInfo)
-                            }
                             token.balance = tokenData.balance
                             token.usdValue = utils.unitToUsd(tokenData.balance, parseFloat(tokenInfo.priceUSD || "0"))
                         }
@@ -87,6 +86,16 @@ class Tasks {
             }
         }
     }
+    async scanFailedBridge() {
+        try {
+            bridge.find({ status: { $eq: "pending" } }).cursor().eachAsync(async function (bridge) {
+                const jobData = await taskQueue.getJob("fasf")
+                if (!jobData) await taskQueue.add(ITasks.bridge, { bridgeId: bridge.bridgeId }, { jobId: bridge.bridgeId })
+            })
+        } catch (e) {
+            console.error(e)
+        }
+    }
     async bridge(job: Job) {
         try {
             const startTime = Date.now()
@@ -129,6 +138,7 @@ class Tasks {
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Processing..")}`)
             //get deposit tx 
             const txReceipt = await web3Handler.waitForTx({ chainId: bridgeData.srcChainId, txHash: bridgeData.dpTxHash })
+            console.log("dp tx receipt", txReceipt)
             if (bridgeData.senderAddress.toLowerCase().trim() !== txReceipt.fromAddress.toLowerCase().trim()) {
                 console.info(`Invalid Sender ${jobData.bridgeId}`)
                 return
@@ -153,12 +163,12 @@ class Tasks {
             })
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Sending.")}`)
             if (!transferTx.status) {
-                await job.retry("failed")
+                await job.retry()
                 return
             }
             const wadtxReceipt = await web3Handler.waitForTx({ chainId: bridgeData.destChainId, txHash: transferTx.txHash })
             if (!wadtxReceipt?.status) {
-                await job.retry("failed")
+                await job.retry()
                 return
             }
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Sending...")}`)

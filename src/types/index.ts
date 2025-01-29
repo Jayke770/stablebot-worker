@@ -98,7 +98,10 @@ export interface IChain {
 
 //tasks 
 export enum ITasks {
-    balance = "userBalance"
+    balance = "balance",
+    sendMessage = "sendMessage",
+    bridge = "bridge",
+    retryFailedBridge = "retryFailedBridge"
 }
 // tx 
 export interface IBroadcastTx {
