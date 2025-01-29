@@ -166,7 +166,7 @@ class Tasks {
             const destTxLink = utils.txLink(destChainData.chainId, wadtxReceipt.txHash)
             const destFeeAmountInUnit = wadtxReceipt.fee || 0
             const destFeeAmountInUsd = utils.unitToUsd(destFeeAmountInUnit, Number(destNativeTokenInfo.priceUSD))
-            const totalFeeInUsd = utils.formatNumber(srcFeeAmountInUsd + destFeeAmountInUsd)
+            const totalFeeInUsd = utils.formatNumber(srcFeeAmountInUsd + destFeeAmountInUsd, true)
             const srcFeeMessage = utils.format.link(srcTxLink, `${srcChainData.emoji} $${utils.formatNumber(srcFeeAmountInUsd, true)}`)
             const destFeeMessage = utils.format.link(destTxLink, `${destChainData.emoji} $${utils.formatNumber(destFeeAmountInUsd, true)}`)
             const feeMessage = `\n✅${seconds}s ⛽️ $${totalFeeInUsd} ${srcFeeMessage} ${destFeeMessage}`
