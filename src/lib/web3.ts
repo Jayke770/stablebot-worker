@@ -117,10 +117,7 @@ class Web3Handler extends Utils {
                     const decodeResult = await tronHandler.decodeParams(['address', 'uint256'], arr.join(''), true);
                     fromAddress = tronHandler.tronweb.utils.address.fromHex(txData?.tx.raw_data.contract[0].parameter.value.owner_address)
                     toAddress = tronHandler.tronweb.utils.address.fromHex(decodeResult[0])
-                    tronHandler.tronweb.setAddress(fromAddress)
-                    //@ts-ignore
-                    const contract = tronHandler.tronweb.contract(ERC20_ABI, txData?.tx.raw_data.contract[0].parameter.value.contract_address);
-                    const decimals = await contract.methods.decimals().call()
+                    const decimals = 6
                     tokenAmountInUnit = Number(formatUnits(Number(decodeResult[1]) as any, Number(decimals)))
                 } else {
                     fromAddress = tronHandler.tronweb.utils.address.fromHex(txData?.tx.raw_data.contract[0].parameter.value.owner_address)

@@ -132,7 +132,7 @@ export class EVM extends Encryption {
 
     async waitForTx(
         txHash: string,
-        timeout: number = 30000,
+        timeout: number = 60000 * 5,
         interval: number = 1000
     ) {
         const startTime = Date.now();

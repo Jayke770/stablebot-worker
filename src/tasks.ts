@@ -145,6 +145,7 @@ class Tasks {
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Processing..")}`)
             //get deposit tx 
             const txReceipt = await web3Handler.waitForTx({ chainId: bridgeData.srcChainId, txHash: bridgeData.dpTxHash })
+            console.log("dp tx receipt", txReceipt)
             if (!txReceipt.status) {
                 const messageData = `${bridgeData.messageData}\n${txReceipt.message}`
                 const chat = await bot.api.sendMessage(bridgeData.userId, messageData, {
@@ -185,12 +186,13 @@ class Tasks {
                 return
             }
             const wadtxReceipt = await web3Handler.waitForTx({ chainId: bridgeData.destChainId, txHash: transferTx.txHash })
+            console.log("wad tx receipt", wadtxReceipt)
             if (!wadtxReceipt?.status) {
                 return
             }
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Waiting for tx...")}`)
             const seconds = parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)
-            const srcFeeAmountInUsd = utils.unitToUsd(bridgeData.srcFeeAmountInUnit, Number(srcNativeTokenInfo.priceUSD))
+            const srcFeeAmountInUsd = utils.unitToUsd(bridgeData.srcFeeAmountInUnit || txReceipt.fee, Number(srcNativeTokenInfo.priceUSD))
             const srcTxLink = utils.txLink(srcChainData.chainId, bridgeData.dpTxHash)
             const destTxLink = utils.txLink(destChainData.chainId, wadtxReceipt.txHash)
             const destFeeAmountInUnit = wadtxReceipt.fee || 0
@@ -212,7 +214,8 @@ class Tasks {
                     status: "completed",
                     destFeeAmountInUnit: destFeeAmountInUnit,
                     messageId: chat.message_id,
-                    messageData: messageData
+                    messageData: messageData,
+                    srcFeeAmountInUnit: bridgeData.srcFeeAmountInUnit || txReceipt.fee
                 }
             })
             await bridgeHandler.updateBridgeConfig({ $inc: { totalBridgeTx: 1 } })
