@@ -7,9 +7,8 @@ new Worker('main',
     async (job: Job) => {
         switch (job.name) {
             case ITasks.balance:
-                break
-            // await tasksHandler.updateBalance(job)
-            // break;
+                await tasksHandler.updateBalance(job)
+                break;
             case ITasks.sendMessage:
                 await tasksHandler.bot.sendMessage(job)
                 break
@@ -23,7 +22,7 @@ new Worker('main',
                 break;
         }
     },
-    { connection: workerConnection, concurrency: 50 }
+    { connection: workerConnection, concurrency: 50, removeOnComplete: { age: 30 } }
 )
     .on("ready", async () => {
         await dbConnect()

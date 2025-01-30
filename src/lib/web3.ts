@@ -59,7 +59,7 @@ class Web3Handler extends Utils {
                 if (!txData || !txData?.tx || !txData?.tx) return { status: false, message: "❌ Tx Failed" }
                 //@ts-ignore
                 if (txData?.txReceipt?.status === "reverted") return { status: false, message: "❌ Tx Failed" }
-                let txFee = (txData?.txReceipt?.effectiveGasPrice || txData?.txReceipt?.cumulativeGasUsed * txData?.txReceipt?.gasUsed),
+                let txFee = (txData?.txReceipt?.effectiveGasPrice * txData?.txReceipt?.gasUsed),
                     fromAddress = "",
                     toAddress = "",
                     tokenAmountInUnit = 0

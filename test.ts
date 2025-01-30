@@ -1,22 +1,20 @@
-import { ERC20_ABI } from "./src/lib/abi";
-import { tonHandler } from "./src/lib/ton";
-import { tronHandler } from "./src/lib/tron";
-import { AbiCoder as abicod } from 'ethers'
-import { web3Handler } from "./src/lib/web3";
-import { evmHandler } from "./src/lib/evm";
-import { TonApiClient } from '@ton-api/client';
-tonHandler.setChain("ton");
-tronHandler.setChain("tron");
-(async () => {
-    const balance = await tronHandler.tronweb.trx.getBalance("TVGLZ3fqj8q8cZtrJ2SmM8xLPbL3aLgZNq")
-    console.log(balance)
-    // const jettonTx = "fc5281a8ef81fe13c0e38d16e7fc3a016ae7f5895fb220de6289765775320f01", nativetx = "7b9c7f8d495c187190f5a08131a1933d2309cf2722bae2ab04374a58246157f7"
-    // const cl = new TonApiClient();
-    // const d = await cl.traces.getTrace(nativetx)
-    // console.log({
-    //     fromAddress: d.children?.[0].transaction.inMsg?.source?.address.toString({ urlSafe: true, bounceable: false }),
-    //     toAddress: d.children?.[0].transaction.inMsg?.destination?.address.toString({ urlSafe: true, bounceable: false })
-    // })
-    // // const data = await tonHandler.waitForTx("UQCUHFgOhnGl8FRjcnOap-v7smQ0Ti6EdUixJHqLyd0Uct7G", jettonTx)
-    // // console.log(data)
-})()
+// import { ERC20_ABI } from "./src/lib/abi";
+// import { tonHandler } from "./src/lib/ton";
+// import { tronHandler } from "./src/lib/tron";
+// import { AbiCoder as abicod } from 'ethers'
+// import { web3Handler } from "./src/lib/web3";
+// import { evmHandler } from "./src/lib/evm";
+// import { TonApiClient } from '@ton-api/client';
+// tonHandler.setChain("ton");
+// tronHandler.setChain("tron");
+// (async () => {
+//     const data = await web3Handler.waitForTx({ chainId: "1", txHash: "0x9692b1fc23fa984031603a316cc5a51908639696da2ee190e5052236c1b97de7" })
+//     console.log(data)
+// })()
+import { taskQueue } from './src/lib/worker.config'
+import { bridge } from './src/models/collections'
+import dbConnect from './src/models/dbConnect'
+import { ITasks } from './src/types'
+// const h = await taskQueue.add(ITasks.balance, { userId: 1391502332 })
+// console.log(h)
+await taskQueue.add(ITasks.bridge, { bridgeId: "bridge-xYbofoh1YzfTMGm" })

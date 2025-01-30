@@ -145,20 +145,30 @@ class Tasks {
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Processing..")}`)
             //get deposit tx 
             const txReceipt = await web3Handler.waitForTx({ chainId: bridgeData.srcChainId, txHash: bridgeData.dpTxHash })
-            console.log("dp tx receipt", txReceipt)
-            if (utils.isTON(bridgeData.srcChainId)) {
-                if (bridgeData.senderAddress.toLowerCase().trim() !== txReceipt.fromAddress.toLowerCase().trim()) {
-                    console.info(`Invalid Sender ${jobData.bridgeId}`)
-                    return
-                }
-                if (bridgeWallet?.address.toLowerCase().trim() !== txReceipt.toAddress.toLowerCase().trim()) {
-                    console.info(`Invalid Sender ${jobData.bridgeId}`)
-                    return
-                }
-                if (bridgeData.srcTokenAmountInUnit < txReceipt.tokenAmountInUnit) {
-                    console.info(`Invalid Src Amount${jobData.bridgeId}`)
-                    return
-                }
+            if (!txReceipt.status) {
+                const messageData = `${bridgeData.messageData}\n${txReceipt.message}`
+                const chat = await bot.api.sendMessage(bridgeData.userId, messageData, {
+                    link_preview_options: { is_disabled: true }
+                })
+                await bridgeHandler.updateBridge({ bridgeId: { $eq: jobData.bridgeId } }, {
+                    $set: {
+                        messageId: chat.message_id
+                    }
+                })
+                await bot.api.deleteMessage(bridgeData.userId, bridgeData.messageId)
+                return
+            }
+            if (bridgeData.senderAddress.toLowerCase().trim() !== txReceipt.fromAddress.toLowerCase().trim()) {
+                console.info(`Invalid Sender ${jobData.bridgeId}`)
+                return
+            }
+            if (bridgeWallet?.address.toLowerCase().trim() !== txReceipt.toAddress.toLowerCase().trim()) {
+                console.info(`Invalid Sender ${jobData.bridgeId}`)
+                return
+            }
+            if (bridgeData.srcTokenAmountInUnit < txReceipt.tokenAmountInUnit) {
+                console.info(`Invalid Src Amount${jobData.bridgeId}`)
+                return
             }
             await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Sending...")}`)
             //validation pass 
@@ -170,17 +180,15 @@ class Tasks {
                     userWallet: bridgeWallet
                 }
             })
-            await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Sending.")}`)
+            await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Waiting for tx.")}`)
             if (!transferTx.status) {
-                await job.retry()
                 return
             }
             const wadtxReceipt = await web3Handler.waitForTx({ chainId: bridgeData.destChainId, txHash: transferTx.txHash })
             if (!wadtxReceipt?.status) {
-                await job.retry()
                 return
             }
-            await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Sending...")}`)
+            await bot.api.editMessageText(bridgeData.userId, bridgeData.messageId, `${bridgeData.messageData}\n✅${parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)}s ${utils.format.italic("Waiting for tx...")}`)
             const seconds = parseInt(`${utils.parseSeconds(startTime) + bridgeData.srcSeconds}`)
             const srcFeeAmountInUsd = utils.unitToUsd(bridgeData.srcFeeAmountInUnit, Number(srcNativeTokenInfo.priceUSD))
             const srcTxLink = utils.txLink(srcChainData.chainId, bridgeData.dpTxHash)

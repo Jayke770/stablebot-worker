@@ -39,7 +39,8 @@ export class Tron extends Encryption {
             if (token.isNative) {
                 //@ts-ignore
                 const balanceInWei = await this.tronweb.trx.getBalance(userAddress);
-                const balance = parseFloat(this.tronweb.fromSun(balanceInWei).toString());
+                const balance = Number(this.tronweb.fromSun(balanceInWei).toString());
+                console.log("bal tron", token.userId, balance)
                 return { ...token, balance };
             } else {
                 this.tronweb.setAddress(userAddress)
@@ -132,7 +133,8 @@ export class Tron extends Encryption {
         while (Date.now() - startTime < timeout) {
         try {
             const tx = await this.tronweb.trx.getTransaction(txHash);
-            if (tx?.ret?.[0]?.contractRet === "SUCCESS") {
+            if (tx) {
+                if (tx?.ret?.[0]?.contractRet !== "SUCCESS") return null
                 const txInfo = await this.tronweb.trx.getTransactionInfo(txHash)
                 if (txInfo) return { tx, txInfo }
             }

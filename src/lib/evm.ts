@@ -139,7 +139,7 @@ export class EVM extends Encryption {
         while (Date.now() - startTime < timeout) {
             try {
                 // Get transactions with matching hash
-                const txReceipt = await this.client.getTransactionReceipt({ hash: txHash as `0x${string}`, })
+                const txReceipt = await this.client.getTransactionReceipt({ hash: txHash as `0x${string}` })
                 const tx = await this.client.getTransaction({ hash: txHash as `0x${string}` })
                 return { txReceipt, tx }
             } catch (error) {
