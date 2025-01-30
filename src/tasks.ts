@@ -204,6 +204,7 @@ class Tasks {
                     messageData: messageData
                 }
             })
+            await bridgeHandler.updateBridgeConfig({ $inc: { totalBridgeTx: 1 } })
             //delete old message 
             await bot.api.deleteMessage(bridgeData.userId, bridgeData.messageId)
             //send notification 
