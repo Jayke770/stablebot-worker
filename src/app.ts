@@ -7,8 +7,9 @@ new Worker('main',
     async (job: Job) => {
         switch (job.name) {
             case ITasks.balance:
-                await tasksHandler.updateBalance(job)
-                break;
+                break
+            // await tasksHandler.updateBalance(job)
+            // break;
             case ITasks.sendMessage:
                 await tasksHandler.bot.sendMessage(job)
                 break
