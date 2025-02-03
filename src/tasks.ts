@@ -185,6 +185,7 @@ class Tasks {
             if (!transferTx.status) {
                 return
             }
+            await Bun.sleep(1000 * 10)
             const wadtxReceipt = await web3Handler.waitForTx({ chainId: bridgeData.destChainId, txHash: transferTx.txHash })
             console.log("wad tx receipt", wadtxReceipt)
             if (!wadtxReceipt?.status) {
