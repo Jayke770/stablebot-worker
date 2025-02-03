@@ -8,7 +8,9 @@ import { TonApiClient } from '@ton-api/client';
 tonHandler.setChain("ton");
 tronHandler.setChain("tron");
 (async () => {
-    const data = await web3Handler.waitForTx({ chainId: "ton", txHash: "fc5281a8ef81fe13c0e38d16e7fc3a016ae7f5895fb220de6289765775320f01" })
+    const data = await web3Handler.waitForTx({
+        chainId: "1", txHash: "0x0cdd11d3087a2d5809b6cc61f361ccd6e3c76071ae394a3628cc8c1a2ad1b7e3"
+    })
     console.dir(data)
 })()
 // import { taskQueue } from './src/lib/worker.config'

@@ -143,7 +143,7 @@ export class EVM extends Encryption {
                 const tx = await this.client.getTransaction({ hash: txHash as `0x${string}` })
                 return { txReceipt, tx }
             } catch (error) {
-                console.error('Error checking transaction:', error);
+                console.error(`Error checking transaction: ${this.chainData?.chainId} ${txHash}`,);
             }
             await Bun.sleep(interval)
         }
