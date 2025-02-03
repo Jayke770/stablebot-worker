@@ -219,8 +219,6 @@ class Tasks {
                 }
             })
             await bridgeHandler.updateBridgeConfig({ $inc: { totalBridgeTx: 1 } })
-            //delete old message 
-            await bot.api.deleteMessage(bridgeData.userId, bridgeData.messageId)
             //send notification 
             for (const gc of NOTIFICATIONS.bridge) {
                 await bot.api.sendMessage(gc.gcId, messageData, {
@@ -228,6 +226,8 @@ class Tasks {
                     message_thread_id: gc.threadId
                 })
             }
+            //delete old message 
+            await bot.api.deleteMessage(bridgeData.userId, bridgeData.messageId).catch(e => console.log("failed to delete"))
             return
         } catch (e) {
             console.log(e)
