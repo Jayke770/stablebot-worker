@@ -398,7 +398,7 @@ export class Ton extends Encryption {
                     return { txEvent, txInfo }
                 }
             } catch (error) {
-                console.error('Error checking transaction:', error);
+                console.error(`Error checking transaction: ${this.chainData?.chainId} ${txHash}`);
             }
             await Bun.sleep(interval)
         }

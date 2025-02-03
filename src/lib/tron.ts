@@ -139,7 +139,7 @@ export class Tron extends Encryption {
                 if (txInfo) return { tx, txInfo }
             }
             } catch (error) {
-
+            console.error(`Error checking transaction: ${this.chainData?.chainId} ${txHash}`,);
             }
             await Bun.sleep(interval)
         }
