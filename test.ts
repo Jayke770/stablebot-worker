@@ -9,7 +9,7 @@ tonHandler.setChain("ton");
 tronHandler.setChain("tron");
 (async () => {
     const data = await web3Handler.waitForTx({
-        chainId: "1", txHash: "0x0cdd11d3087a2d5809b6cc61f361ccd6e3c76071ae394a3628cc8c1a2ad1b7e3"
+        chainId: "ton", txHash: "f8f95d093c86ebd565ccd3cfb203a3890adaf05948bffd17a28af1bdb25e7d8c"
     })
     console.dir(data)
 })()

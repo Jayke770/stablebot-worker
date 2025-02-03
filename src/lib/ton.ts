@@ -313,9 +313,7 @@ export class Ton extends Encryption {
         try {
             const endpoint = new URL(`${this.chainData?.restApi}/getWalletInformation?address=${address}`)
             const response = await fetch(endpoint).then(e => e.json()).catch(e => undefined)
-            console.log("wallet info", response)
             const walletInfo = getWalletInformationResponse.safeParse(response)
-            console.log(walletInfo.error)
             if (!walletInfo.success) return null
             if (!walletInfo.data.ok) return null
             return walletInfo.data.result
@@ -339,7 +337,6 @@ export class Ton extends Encryption {
                     ignore_chksig: false
                 })
             }).then(e => e.json()).catch(e => undefined)
-            console.log("fee", response)
             const fee = estimateFeeResponse.safeParse(response)
             if (!fee.success) return null
             if (!fee.data.ok) return null
@@ -358,7 +355,6 @@ export class Ton extends Encryption {
             if (!jettonData.data.ok) return null
             return jettonData.data.result
         } catch (e) {
-            console.log(e)
             return null
         }
     }
