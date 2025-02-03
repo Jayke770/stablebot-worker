@@ -18,10 +18,12 @@ import {
 } from "@ton/ton";
 import BN from 'bn.js'
 import TonWeb from "tonweb";
+import { TonApiClient } from '@ton-api/client'
 import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
 import { utils } from "./utils";
 import { z } from 'zod'
 import { parseUnits, formatUnits } from "viem";
+import { envconfig } from "./config";
 const getBalanceResponse = z.object({
     ok: z.boolean(),
     result: z.string()
@@ -142,10 +144,12 @@ const getTransactionsResponse = z.array(z.object({
 export class Ton extends Encryption {
     private chainData?: IChain;
     client: TonWeb
+    tonApi: TonApiClient
     constructor() {
         super()
         this.chainData = utils.getChain("ton");
         this.client = new TonWeb(new TonWeb.HttpProvider(this.chainData?.rpc))
+        this.tonApi = new TonApiClient({ apiKey: envconfig.TON_CONSOLE_API_KEY })
     }
     setChain(chainId: string) {
         const chainData = utils.getChain(chainId);
@@ -380,7 +384,6 @@ export class Ton extends Encryption {
         return tonHandler.parseAddress(cellAddress)
     }
     async waitForTx(
-        address: string,
         txHash: string,
         timeout: number = 30000,
         interval: number = 1000
@@ -389,12 +392,10 @@ export class Ton extends Encryption {
         while (Date.now() - startTime < timeout) {
             try {
                 // Get transactions with matching hash
-                const txnsData = await this.client.getTransactions(address, 1, undefined, txHash, 0);
-                const tx = getTransactionsResponse.safeParse(txnsData)
-                if (tx.success) {
-                    if (tx.data.length > 0) {
-                        return tx.data[0];
-                    }
+                const txEvent = await this.tonApi.events.getEvent(txHash)
+                if (!txEvent?.inProgress) {
+                    const txInfo = await this.tonApi.blockchain.getBlockchainTransaction("fc5281a8ef81fe13c0e38d16e7fc3a016ae7f5895fb220de6289765775320f01")
+                    return { txEvent, txInfo }
                 }
             } catch (error) {
                 console.error('Error checking transaction:', error);

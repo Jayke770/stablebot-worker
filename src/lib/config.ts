@@ -25,7 +25,8 @@ export const envconfig = envalid.cleanEnv(process.env, {
     CHAIN_TON_TESTNET_RPC: envalid.url({ default: "" }),
     CHAIN_TON_RPC: envalid.url(),
     CHAIN_TON_REST_API: envalid.url(),
-    CHAIN_TON_TESTNET_REST_API: envalid.url(),
+    CHAIN_TON_TESTNET_REST_API: envalid.url(), 
+    TON_CONSOLE_API_KEY: envalid.str({ default: undefined })
 })
 export const MAINNET_TOKENS: ITokenMetaData[] = [
     {

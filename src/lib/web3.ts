@@ -49,7 +49,7 @@ class Web3Handler extends Utils {
             }
         }
     }
-    async waitForTx(params: { chainId: string, txHash: string, walletAddress?: string }): Promise<IValidateBridgeTx> {
+    async waitForTx(params: { chainId: string, txHash: string }): Promise<IValidateBridgeTx> {
         try {
             const chainData = this.getChain(params.chainId)
             if (this.isEVM(params.chainId)) {
@@ -136,11 +136,33 @@ class Web3Handler extends Utils {
                 }
             } else if (this.isTON(params.chainId)) {
                 tonHandler.setChain(params.chainId)
-                const txData = await tonHandler.waitForTx(params.walletAddress!, params.txHash)
+                const txData = await tonHandler.waitForTx(params.txHash)
+                //@ts-ignore
+                if (txData?.txInfo?.aborted || txData?.txInfo?.destroyed || !txData?.txInfo?.actionPhase?.success) return { status: false, message: "❌ Tx Failed" }
+                const transferEvent = txData?.txEvent.actions.find(e => e.type === "TonTransfer" || e.type === "JettonTransfer")
+                let txFee = Number(formatUnits(BigInt(txData?.txInfo.actionPhase.totalFees), chainData?.nativeTokenDecimal || 6)),
+                    fromAddress = "",
+                    toAddress = "",
+                    tokenAmountInUnit = 0
+                if (transferEvent?.type === "JettonTransfer") {
+                    fromAddress = transferEvent?.JettonTransfer?.sender?.address?.toString({ bounceable: false, urlSafe: true })!
+                    toAddress = transferEvent?.JettonTransfer?.recipient?.address?.toString({ bounceable: false, urlSafe: true })!
+                    tokenAmountInUnit = Number(formatUnits(transferEvent.JettonTransfer?.amount!, transferEvent.JettonTransfer?.jetton.decimals!))
+                } else {
+                    fromAddress = transferEvent?.TonTransfer?.sender.address?.toString({ urlSafe: true, bounceable: false })!
+                    toAddress = transferEvent?.TonTransfer?.recipient.address?.toString({ urlSafe: true, bounceable: false })!
+                    tokenAmountInUnit = Number(formatUnits(transferEvent?.TonTransfer?.amount!, chainData?.nativeTokenDecimal!))
+                }
                 //@ts-ignore
                 if (!txData) return { status: false, message: "❌ Tx Failed" }
-                //@ts-ignore
-                return { status: true, message: "" }
+                return {
+                    status: true,
+                    fromAddress,
+                    toAddress,
+                    txHash: params.txHash,
+                    fee: txFee,
+                    tokenAmountInUnit
+                }
             } else {
                 //@ts-ignore
                 return { status: false, message: "❌ Tx Failed" }

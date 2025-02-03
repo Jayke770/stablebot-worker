@@ -6,7 +6,7 @@
       "dependencies": {
         "@grammyjs/parse-mode": "^1.11.1",
         "@ton-api/client": "^0.3.1",
-        "@ton/core": "^0.59.1",
+        "@ton/core": "^0.60.0",
         "@ton/crypto": "^3.3.0",
         "@ton/ton": "^15.1.0",
         "bn.js": "^5.2.1",
@@ -466,7 +466,7 @@
 
     "@ton-api/client": ["@ton-api/client@0.3.1", "", { "dependencies": { "core-js-pure": "^3.38.0" }, "peerDependencies": { "@ton/core": ">=0.59.0" } }, "sha512-QwKcYcX9vaudJK7E7Gfx87A/TU1LgAUrNGdW6OZVKvKxttoUQUtEtRqLk3xqyuhQK24IYAd6BQ6Ki33X7zSdaw=="],
 
-    "@ton/core": ["@ton/core@0.59.1", "", { "dependencies": { "symbol.inspect": "1.0.1" }, "peerDependencies": { "@ton/crypto": ">=3.2.0" } }, "sha512-SxFBAvutYJaIllTkv82vbHTJhJI6NxzqUhi499CDEjJEZ9i6i9lHJiK2df4dlLAb/4SiWX6+QUzESkK4DEdnCw=="],
+    "@ton/core": ["@ton/core@0.60.0", "", { "dependencies": { "symbol.inspect": "1.0.1" }, "peerDependencies": { "@ton/crypto": ">=3.2.0" } }, "sha512-vK0itrieVashNQ7geqpvlWcOyXsXKKtIo6h02HcVcMeNo+QxovBaDAvou3BUKDnf7ej6+rRSuXMSOIjBct/zIg=="],
 
     "@ton/crypto": ["@ton/crypto@3.3.0", "", { "dependencies": { "@ton/crypto-primitives": "2.1.0", "jssha": "3.2.0", "tweetnacl": "1.0.3" } }, "sha512-/A6CYGgA/H36OZ9BbTaGerKtzWp50rg67ZCH2oIjV1NcrBaCK9Z343M+CxedvM7Haf3f/Ee9EhxyeTp0GKMUpA=="],
 
