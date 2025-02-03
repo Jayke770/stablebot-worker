@@ -381,7 +381,7 @@ export class Ton extends Encryption {
     }
     async waitForTx(
         txHash: string,
-        timeout: number = 30000,
+        timeout: number = 60000 * 10,
         interval: number = 1000
     ) {
         const startTime = Date.now();
